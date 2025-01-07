@@ -56,51 +56,64 @@ applyTheme();
 // --------------------------------------------- //
 // Loader & Loading Animation Start
 // --------------------------------------------- //
+
 $(window).on("load", function () {
   "use strict";
 
   const content = document.querySelector("body");
   const imgLoad = imagesLoaded(content);
 
-  let imagesLoadedCompleted = false; // 標記圖片是否載入完成
-  const TIMEOUT = 3000; // 超時設定為3秒
-
-  // 定義進入頁面的函式
-  function finishLoading() {
-    console.log("進入頁面");
-    $(".loader").fadeOut(500, function () {
-      console.log("Loader 動畫完成");
-      $(this).remove();
-      $("#main").addClass("animate-in");
-      $("#header").addClass("animate-in");
-
-      // 初始化 GSAP 與 ScrollTrigger
-      gsap.registerPlugin(ScrollTrigger);
-      ScrollTrigger.refresh();
-    });
-  }
-
-  // 超時機制
-  const timeout = setTimeout(() => {
-    if (!imagesLoadedCompleted) {
-      console.warn("圖片載入超時，直接進入頁面");
-      finishLoading(); // 執行進入頁面邏輯
-    }
-  }, TIMEOUT);
-
-  // 當所有圖片完成載入時
   imgLoad.on("done", function () {
-    clearTimeout(timeout); // 清除超時計時器
-    imagesLoadedCompleted = true;
     console.log("所有圖片載入完成");
-    finishLoading(); // 執行進入頁面邏輯
+    setTimeout(function () {
+      $(".loader").fadeOut(500, function () {
+        console.log("Loader 動畫完成");
+        $(this).remove();
+        $("#main").addClass("animate-in");
+        $("#header").addClass("animate-in");
+
+        // 初始化 GSAP 與 ScrollTrigger
+        gsap.registerPlugin(ScrollTrigger);
+        ScrollTrigger.refresh();
+      });
+    }, 1000); // 模擬延遲以確保 loader 可見
   });
 });
 
 $(function () {
   "use strict";
-  gsap.registerPlugin(ScrollTrigger);
 
+  gsap.registerPlugin(ScrollTrigger);
+  const content = document.querySelector("body");
+  const imgLoad = imagesLoaded(content);
+
+  imgLoad.on("done", (instance) => {
+    document.getElementById("loader__container").classList.add("fade-out");
+    setTimeout(() => {
+      document.getElementById("loader").classList.add("loaded");
+    }, 300);
+
+    gsap.set(".animate-headline", { y: 50, opacity: 0 });
+    ScrollTrigger.batch(".animate-headline", {
+      interval: 0.1,
+      batchMax: 4,
+      duration: 6,
+      onEnter: (batch) =>
+        gsap.to(batch, {
+          opacity: 1,
+          y: 0,
+          ease: "sine",
+          stagger: { each: 0.15, grid: [1, 4] },
+          overwrite: true,
+        }),
+      onLeave: (batch) =>
+        gsap.set(batch, { opacity: 1, y: 0, overwrite: true }),
+      onEnterBack: (batch) =>
+        gsap.to(batch, { opacity: 1, y: 0, stagger: 0.15, overwrite: true }),
+      onLeaveBack: (batch) =>
+        gsap.set(batch, { opacity: 0, y: 50, overwrite: true }),
+    });
+  });
   // --------------------------------------------- //
   // Loader & Loading Animation End
   // --------------------------------------------- //
